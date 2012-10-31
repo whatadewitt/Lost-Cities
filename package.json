@@ -1,5 +1,5 @@
 {
-  "name": "application-name",
+  "name": "lost-cities",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -8,8 +8,8 @@
   "dependencies": {
     "express": "3.0.0",
     "hjs": "*",
-    "less-middleware": "*",
+    "socket.io": "*",
     "mongoose": "*",
-    "socket.io": "*"
+    "cities-game": "*"
   }
 }

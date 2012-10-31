@@ -8,9 +8,7 @@ var express = require('express')
   , user = require('./routes/user')
   , http = require('http')
   , path = require('path')
-  , io = require('socket.io').listen(80)
-  , mongoose = require('mongoose')
-  , db = mongoose.createConnection('localhost', 'lostcities');
+  , game = require('cities-game');
 
 var app = express();
 
@@ -23,7 +21,6 @@ app.configure(function(){
   app.use(express.bodyParser());
   app.use(express.methodOverride());
   app.use(app.router);
-  app.use(require('less-middleware')({ src: __dirname + '/public' }));
   app.use(express.static(path.join(__dirname, 'public')));
 });
 
@@ -34,6 +31,25 @@ app.configure('development', function(){
 app.get('/', routes.index);
 app.get('/users', user.list);
 
-http.createServer(app).listen(app.get('port'), function(){
+var server = http.createServer(app).listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
+
+  game.buildDeck();
+  game.getDeck();
+});
+
+var io = require('socket.io').listen(server);
+
+io.sockets.on('connection', function (socket) {
+  console.log(socket + ' connected');
+
+  /* io.sockets.emit('this', { will: 'be received by everyone'});
+
+  socket.on('private message', function (from, msg) {
+    console.log('I received a private message by ', from, ' saying ', msg);
+  });
+
+  socket.on('disconnect', function () {
+    io.sockets.emit('user disconnected');
+  }); */
 });
