@@ -8,9 +8,14 @@ var express = require('express')
   , user = require('./routes/user')
   , http = require('http')
   , path = require('path')
-  , game = require('cities-game');
+  , redis = require('redis')
+  , client = redis.createClient();
 
 var app = express();
+
+client.on("error", function(err) {
+  console.log("REDIS ERR: " + err);
+});
 
 app.configure(function(){
   app.set('port', process.env.PORT || 3000);
@@ -33,15 +38,27 @@ app.get('/users', user.list);
 
 var server = http.createServer(app).listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
-
-  game.buildDeck();
-  game.getDeck();
 });
 
 var io = require('socket.io').listen(server);
 
 io.sockets.on('connection', function (socket) {
-  console.log(socket + ' connected');
+  console.log(socket.id + ' connected');
+
+  var game = require('cities-game');
+
+  socket.on('new game', function(id) {
+    console.log("creating game on socket " + socket);
+    socket.room = id;
+    socket.join(id);
+    game.buildDeck();
+    console.log("deck built: " + JSON.stringify(game.getDeck()));
+    client.set(socket + ":deck", JSON.stringify(game.getDeck()), redis.print);
+    console.log("broadcasting");
+    socket.broadcast.in(id).emit('game created', {
+      id: id
+    });
+  })
 
   /* io.sockets.emit('this', { will: 'be received by everyone'});
 
